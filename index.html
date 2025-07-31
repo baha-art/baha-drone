@@ -29,7 +29,7 @@
       display: none;
     }
     #game-win {
-      background: rgba(0, 128, 0, 0.8); /* yeşil kazanç ekranı */
+      background: rgba(0, 128, 0, 0.8);
     }
     #game-over h2, #start-screen h2, #game-win h2 {
       margin: 0 0 10px;
@@ -40,17 +40,15 @@
 
   <canvas id="gameCanvas" width="480" height="640"></canvas>
 
-  <!-- Başlangıç ekranı -->
   <div id="start-screen">
     <h2>Flappy Drone</h2>
     <br>
-    <img style="width: 70px; height: 35px;" src=".dronesimge.png" alt="resim bulunamadı">
+    <img style="width: 70px; height: 35px;" src="dronesimge.png" alt="resim bulunamadı">
     <p style="margin: 10px 0;">15 Puanı Topla! Yüzde 10 İndirimi Yakala!</p>
     <br>
     <button style="width: 100px; height: 30px;" id="start-button">Başla</button>
   </div>
 
-  <!-- Kaybetme ekranı -->
   <div id="game-over">
     <h2>Oyun Bitti</h2>
     <p>🎥 Reklam çekimi mi lazım?</p>
@@ -60,7 +58,6 @@
     <button onclick="location.reload()">Yeniden Oyna</button>
   </div>
 
-  <!-- Kazanma ekranı -->
   <div id="game-win">
     <h2>Tebrikler! 🎉</h2>
     <p>İndirim Kodu: <strong>DRONE10</strong></p>
@@ -72,14 +69,13 @@
     const ctx = canvas.getContext("2d");
 
     const droneImg = new Image();
-    droneImg.src = ".dronesimge.png";
+    droneImg.src = "dronesimge.png";
 
-    // Ses dosyaları
     const jumpSound = new Audio("jumpSound.mp3");
     const hitSound = new Audio("hitSound.mp3");
     const winSound = new Audio("winSound.mp3");
 
-    jumpSound.volume = 0.2; // %50 ses seviyesi
+    jumpSound.volume = 0.2;
 
     let drone = { x: 50, y: 150, width: 70, height: 35, gravity: 0.25, lift: -6, velocity: 0 };
     let pipes = [];
