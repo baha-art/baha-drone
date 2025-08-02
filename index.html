@@ -1,248 +1,155 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Drone</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Baha Yılmaz | Tanıtım</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
-      background: skyblue;
-      font-family: sans-serif;
-    }
-    canvas {
-      display: block;
-      margin: 0 auto;
-      background: linear-gradient(skyblue, white);
-    }
-    #game-over,
-    #start-screen,
-    #game-win {
-      position: absolute;
-      top: 30%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.8);
-      color: #fff;
-      padding: 20px;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #fff4dc;
       text-align: center;
-      border-radius: 10px;
+    }
+
+    .button {
+      background-color: #ffa726;
+      color: white;
+      padding: 14px 20px;
+      margin: 12px auto;
+      border: none;
+      border-radius: 14px;
+      width: 250px;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 2px 2px 10px #ddd;
+      cursor: default;
+    }
+
+    .drone-button {
+      margin: 30px auto 20px;
+      cursor: pointer;
+    }
+
+    .footer-icons {
+      display: flex;
+      justify-content: center;
+      margin-top: 25px;
+      gap: 25px;
+    }
+
+    .footer-icons img {
+      width: 45px;
+      height: 45px;
+      cursor: pointer;
+    }
+
+    /* MODAL STİLİ */
+    .modal {
       display: none;
+      position: fixed;
+      z-index: 99;
+      padding-top: 180px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
     }
-    #game-win {
-      background: rgba(0, 128, 0, 0.8);
+
+    .modal-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 320px;
+      text-align: center;
     }
-    #game-over h2,
-    #start-screen h2,
-    #game-win h2 {
-      margin: 0 0 10px;
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: -10px;
     }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
 
-<canvas id="gameCanvas" width="480" height="640"></canvas>
+  <div class="button" style="margin-top: 40px;">BAHA YILMAZ</div>
+  <div class="button">Drone Çekimi</div>
+  <div class="button">Video Edit</div>
+  <div class="button">Düğün Edit</div>
+  <div class="button">Grafik Tasarım</div>
+  <div class="button">Kartvizit Tasarım</div>
+  <div class="button">Kartvizit Baskı vb.</div>
 
-<div id="start-screen">
-  <h2>Flappy Drone</h2><br>
-  <img src="dronesimge.png" alt="resim bulunamadı" style="width:70px;height:35px;">
-  <p style="margin:10px 0;">15 Puanı Topla! Yüzde 10 İndirimi Yakala!</p><br>
-  <button id="start-button" style="width:100px;height:30px;">Başla</button>
-</div>
+  <!-- Drone Butonu -->
+  <div class="drone-button">
+    <img src="dronebuton.png" alt="Drone Buton" width="130" onclick="location.href='oyun.html'">
+  </div>
 
-<div id="game-over">
-  <h2>Oyun Bitti</h2>
-  <p>🎥 Reklam çekimi mi lazım?</p>
-  <p><strong>Baha | Drone & Video</strong></p>
-  <p>📱 +90 531 102 41 00</p>
-  <p>📸 Instagram: @baha.tasarim</p>
-  <button onclick="location.reload()">Yeniden Oyna</button>
-</div>
+  <!-- Alt İkonlar -->
+  <div class="footer-icons">
+    <img src="epostasimge.png" alt="E-posta" onclick="openModal('modalEmail')">
+    <img src="telefonsimge.png" alt="Telefon" onclick="openModal('modalPhone')">
+    <img src="instagramsimge.png" alt="Instagram" onclick="openModal('modalInstagram')">
+  </div>
 
-<div id="game-win">
-  <h2>Tebrikler! 🎉</h2>
-  <p>İndirim Kodu: <strong>DRONE10</strong></p>
-  <button onclick="location.reload()">Yeniden Oyna</button>
-</div>
+  <!-- Modaller -->
+  <div id="modalEmail" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalEmail')">&times;</span>
+      <p><strong>E-Posta:</strong><br>bahayilmaz30@gmail.com</p>
+    </div>
+  </div>
 
-<script>
-const canvas = document.getElementById("gameCanvas");
-const ctx     = canvas.getContext("2d");
+  <div id="modalPhone" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalPhone')">&times;</span>
+      <p><strong>Telefon:</strong><br>0531 102 41 00</p>
+    </div>
+  </div>
 
-// === DRONE GÖRSELLERİ ===
-const droneImgs = [new Image(), new Image(), new Image()];
-droneImgs[0].src = "dronesimge.png";
-droneImgs[1].src = "dronesimge2.png";
-droneImgs[2].src = "dronesimge3.png";
+  <div id="modalInstagram" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('modalInstagram')">&times;</span>
+      <p><strong>Instagram:</strong><br>@baha.tasarim</p>
+    </div>
+  </div>
 
-let currentDroneFrame = 0;
-setInterval(() => {
-  currentDroneFrame = (currentDroneFrame + 1) % droneImgs.length;
-}, 500);
-
-// === YILDIZ RESMİ ===
-const starImg = new Image();
-starImg.src = "yildizsimge.png";
-
-const jumpSound = new Audio("jumpSound.mp3");
-const hitSound  = new Audio("hitSound.mp3");
-const winSound  = new Audio("winSound.mp3");
-jumpSound.volume = 0.2;
-
-let drone = {x:50,y:150,width:70,height:35,gravity:0.25,lift:-6,velocity:0};
-let pipes = [];
-let score = 0;
-let isGameOver = false;
-let isGameStarted = false;
-let starVisible = false;
-let star = {x:canvas.width + 100, y:200, width:40, height:40};
-
-const startScreen = document.getElementById("start-screen");
-const startButton = document.getElementById("start-button");
-
-let lastTime = 0;
-
-function drawDrone() {
-  const image = droneImgs[currentDroneFrame];
-  ctx.drawImage(image, drone.x, drone.y, drone.width, drone.height);
-}
-
-function drawPipe(pipe) {
-  ctx.fillStyle="green";
-  ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
-  ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
-}
-
-function drawStar() {
-  ctx.drawImage(starImg, star.x, star.y, star.width, star.height);
-}
-
-function resetGame() {
-  pipes = [];
-  score = 0;
-  drone.y = 150;
-  drone.velocity = 0;
-  isGameOver = false;
-  isGameStarted = true;
-  starVisible = false;
-  star.x = canvas.width + 100;
-  startScreen.style.display = "none";
-  document.getElementById("game-over").style.display = "none";
-  document.getElementById("game-win").style.display  = "none";
-  lastTime = performance.now();
-  requestAnimationFrame(loop);
-}
-
-function gameOver() {
-  hitSound.play();
-  isGameOver = true;
-  isGameStarted = false;
-  document.getElementById("game-over").style.display = "block";
-}
-
-function gameWin() {
-  winSound.play();
-  isGameOver = true;
-  isGameStarted = false;
-  document.getElementById("game-win").style.display = "block";
-}
-
-function loop(currentTime) {
-  if (isGameOver || !isGameStarted) return;
-
-  const deltaTime = (currentTime - lastTime) / 16.666;
-  lastTime = currentTime;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drone.velocity += drone.gravity * deltaTime;
-  drone.y += drone.velocity * deltaTime;
-
-  if (drone.y + drone.height > canvas.height || drone.y < 0) return gameOver();
-
-  drawDrone();
-
-  // Boru üretimi sadece skor < 15 ise devam eder
-  if (score < 15 && (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200)) {
-    const top = 100 + Math.random() * 100;
-    const gap = 180;
-    const bottom = canvas.height - top - gap;
-    pipes.push({x: canvas.width, top, bottom, width: 60});
-  }
-
-  for (let i = 0; i < pipes.length; i++) {
-    const pipe = pipes[i];
-    pipe.x -= 2 * deltaTime;
-
-    drawPipe(pipe);
-
-    if (
-      drone.x < pipe.x + pipe.width &&
-      drone.x + drone.width > pipe.x &&
-      (drone.y < pipe.top || drone.y + drone.height > canvas.height - pipe.bottom)
-    ) {
-      return gameOver();
+  <script>
+    function openModal(id) {
+      document.getElementById(id).style.display = "block";
     }
 
-    if (!pipe.passed && pipe.x + pipe.width < drone.x) {
-      pipe.passed = true;
-      score++;
-      if (score === 15) {
-  // Yıldız sabit olarak ekran ortasında belirsin
-  starVisible = true;
-  star.x = canvas.width;
-  star.y = canvas.height / 2 - star.height / 2;
-}
+    function closeModal(id) {
+      document.getElementById(id).style.display = "none";
     }
-  }
 
-  pipes = pipes.filter(p => p.x + p.width > 0);
-
-  if (starVisible) {
-    star.x -= 2 * deltaTime;
-    drawStar();
-
-    if (
-      drone.x < star.x + star.width &&
-      drone.x + drone.width > star.x &&
-      drone.y < star.y + star.height &&
-      drone.y + drone.height > star.y
-    ) {
-      return gameWin();
+    // Kapatmak için dışarı tıklama
+    window.onclick = function(event) {
+      const modals = ["modalEmail", "modalPhone", "modalInstagram"];
+      modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      });
     }
-  }
-
-  ctx.fillStyle = "black";
-  ctx.font = "24px sans-serif";
-  ctx.fillText("Skor: " + score, 10, 30);
-
-  requestAnimationFrame(loop);
-}
-
-startButton.addEventListener("click", resetGame);
-
-function jump() {
-  if (isGameStarted) {
-    drone.velocity = drone.lift;
-    jumpSound.currentTime = 0;
-    jumpSound.play();
-  }
-}
-document.addEventListener("keydown", jump);
-document.addEventListener("touchstart", jump);
-
-let loadedImages = 0;
-[...droneImgs, starImg].forEach(img => {
-  img.onload = () => {
-    loadedImages++;
-    if (loadedImages === droneImgs.length + 1) {
-      startScreen.style.display = "block";
-    }
-  };
-});
-</script>
-
+  </script>
 
 </body>
 </html>

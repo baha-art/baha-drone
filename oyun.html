@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Drone</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: skyblue;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(skyblue, white);
+    }
+    #game-over,
+    #start-screen,
+    #game-win {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      border-radius: 10px;
+      display: none;
+    }
+    #game-win {
+      background: rgba(0, 128, 0, 0.8);
+    }
+    #game-over h2,
+    #start-screen h2,
+    #game-win h2 {
+      margin: 0 0 10px;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="480" height="640"></canvas>
+
+<div id="start-screen">
+  <h2>Flappy Drone</h2><br>
+  <img src="dronesimge.png" alt="resim bulunamadı" style="width:70px;height:35px;">
+  <p style="margin:10px 0;">15 Puanı Topla! Yüzde 10 İndirimi Yakala!</p><br>
+  <button id="start-button" style="width:100px;height:30px;">Başla</button>
+</div>
+
+<div id="game-over">
+  <h2>Oyun Bitti</h2>
+  <p>🎥 Reklam çekimi mi lazım?</p>
+  <p><strong>Baha | Drone & Video</strong></p>
+  <p>📱 +90 531 102 41 00</p>
+  <p>📸 Instagram: @baha.tasarim</p>
+  <button onclick="location.reload()">Yeniden Oyna</button>
+</div>
+
+<div id="game-win">
+  <h2>Tebrikler! 🎉</h2>
+  <p>İndirim Kodu: <strong>DRONE10</strong></p>
+  <button onclick="location.reload()">Yeniden Oyna</button>
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx     = canvas.getContext("2d");
+
+// === DRONE GÖRSELLERİ ===
+const droneImgs = [new Image(), new Image(), new Image()];
+droneImgs[0].src = "dronesimge.png";
+droneImgs[1].src = "dronesimge2.png";
+droneImgs[2].src = "dronesimge3.png";
+
+let currentDroneFrame = 0;
+setInterval(() => {
+  currentDroneFrame = (currentDroneFrame + 1) % droneImgs.length;
+}, 500);
+
+// === YILDIZ RESMİ ===
+const starImg = new Image();
+starImg.src = "yildizsimge.png";
+
+const jumpSound = new Audio("jumpSound.mp3");
+const hitSound  = new Audio("hitSound.mp3");
+const winSound  = new Audio("winSound.mp3");
+jumpSound.volume = 0.2;
+
+let drone = {x:50,y:150,width:70,height:35,gravity:0.25,lift:-6,velocity:0};
+let pipes = [];
+let score = 0;
+let isGameOver = false;
+let isGameStarted = false;
+let starVisible = false;
+let star = {x:canvas.width + 100, y:200, width:40, height:40};
+
+const startScreen = document.getElementById("start-screen");
+const startButton = document.getElementById("start-button");
+
+let lastTime = 0;
+
+function drawDrone() {
+  const image = droneImgs[currentDroneFrame];
+  ctx.drawImage(image, drone.x, drone.y, drone.width, drone.height);
+}
+
+function drawPipe(pipe) {
+  ctx.fillStyle="green";
+  ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+  ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
+}
+
+function drawStar() {
+  ctx.drawImage(starImg, star.x, star.y, star.width, star.height);
+}
+
+function resetGame() {
+  pipes = [];
+  score = 0;
+  drone.y = 150;
+  drone.velocity = 0;
+  isGameOver = false;
+  isGameStarted = true;
+  starVisible = false;
+  star.x = canvas.width + 100;
+  startScreen.style.display = "none";
+  document.getElementById("game-over").style.display = "none";
+  document.getElementById("game-win").style.display  = "none";
+  lastTime = performance.now();
+  requestAnimationFrame(loop);
+}
+
+function gameOver() {
+  hitSound.play();
+  isGameOver = true;
+  isGameStarted = false;
+  document.getElementById("game-over").style.display = "block";
+}
+
+function gameWin() {
+  winSound.play();
+  isGameOver = true;
+  isGameStarted = false;
+  document.getElementById("game-win").style.display = "block";
+}
+
+function loop(currentTime) {
+  if (isGameOver || !isGameStarted) return;
+
+  const deltaTime = (currentTime - lastTime) / 16.666;
+  lastTime = currentTime;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drone.velocity += drone.gravity * deltaTime;
+  drone.y += drone.velocity * deltaTime;
+
+  if (drone.y + drone.height > canvas.height || drone.y < 0) return gameOver();
+
+  drawDrone();
+
+  // Boru üretimi sadece skor < 15 ise devam eder
+  if (score < 15 && (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200)) {
+    const top = 100 + Math.random() * 100;
+    const gap = 180;
+    const bottom = canvas.height - top - gap;
+    pipes.push({x: canvas.width, top, bottom, width: 60});
+  }
+
+  for (let i = 0; i < pipes.length; i++) {
+    const pipe = pipes[i];
+    pipe.x -= 2 * deltaTime;
+
+    drawPipe(pipe);
+
+    if (
+      drone.x < pipe.x + pipe.width &&
+      drone.x + drone.width > pipe.x &&
+      (drone.y < pipe.top || drone.y + drone.height > canvas.height - pipe.bottom)
+    ) {
+      return gameOver();
+    }
+
+    if (!pipe.passed && pipe.x + pipe.width < drone.x) {
+      pipe.passed = true;
+      score++;
+      if (score === 15) {
+  // Yıldız sabit olarak ekran ortasında belirsin
+  starVisible = true;
+  star.x = canvas.width;
+  star.y = canvas.height / 2 - star.height / 2;
+}
+    }
+  }
+
+  pipes = pipes.filter(p => p.x + p.width > 0);
+
+  if (starVisible) {
+    star.x -= 2 * deltaTime;
+    drawStar();
+
+    if (
+      drone.x < star.x + star.width &&
+      drone.x + drone.width > star.x &&
+      drone.y < star.y + star.height &&
+      drone.y + drone.height > star.y
+    ) {
+      return gameWin();
+    }
+  }
+
+  ctx.fillStyle = "black";
+  ctx.font = "24px sans-serif";
+  ctx.fillText("Skor: " + score, 10, 30);
+
+  requestAnimationFrame(loop);
+}
+
+startButton.addEventListener("click", resetGame);
+
+function jump() {
+  if (isGameStarted) {
+    drone.velocity = drone.lift;
+    jumpSound.currentTime = 0;
+    jumpSound.play();
+  }
+}
+document.addEventListener("keydown", jump);
+document.addEventListener("touchstart", jump);
+
+let loadedImages = 0;
+[...droneImgs, starImg].forEach(img => {
+  img.onload = () => {
+    loadedImages++;
+    if (loadedImages === droneImgs.length + 1) {
+      startScreen.style.display = "block";
+    }
+  };
+});
+</script>
+
+
+</body>
+</html>
